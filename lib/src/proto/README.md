@@ -27,3 +27,25 @@ cmake ..
 ## Step 2
 
 Simply run `make` to generate the respective C and Python files. The newly created files will overwrite those under `components/protocomm/proto-c` and `components/protocomm/python`
+
+## network_ctrl.proto
+
+Vendored from `espressif/idf-extra-components`, `network_provisioning` v1.2.4 —
+the version the Coltiva firmware pins. It defines the `prov-ctrl` endpoint,
+whose `CmdCtrlWifiReset` clears the device's provisioning state machine after
+a refused join so corrected credentials can be applied over the same session.
+
+> **The Dart under `dart/network_ctrl.*` was written by hand**, against the
+> shape `protoc` produces for the other files here, because no Dart toolchain
+> was available where it was added. It carries the usual "generated code"
+> header so that a real regeneration diffs cleanly rather than rewriting the
+> file wholesale — but it has not itself been through `protoc`.
+>
+> **Regenerate it before relying on it**, and check the diff is empty:
+>
+> ```sh
+> dart pub global activate protoc_plugin
+> protoc --dart_out=lib/src/proto/dart -Ilib/src/proto \
+>     lib/src/proto/network_ctrl.proto
+> git diff --stat lib/src/proto/dart/
+> ```

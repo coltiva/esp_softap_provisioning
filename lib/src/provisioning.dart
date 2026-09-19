@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'proto/dart/constants.pbenum.dart';
+import 'proto/dart/network_ctrl.pb.dart';
 import 'proto/dart/wifi_config.pb.dart';
 import 'proto/dart/wifi_scan.pb.dart';
 import 'proto/dart/session.pb.dart';
@@ -258,6 +259,48 @@ class Provisioning {
     }
 
     return null;
+  }
+
+  /// Clears the device's provisioning state machine after a refused join, so
+  /// corrected credentials can be sent over the same session.
+  ///
+  /// This is what makes a wrong WiFi password recoverable without the factory
+  /// reset button. After a refused join the device sits in a failure state,
+  /// and while it will still accept a second [sendWifiConfig], the
+  /// [applyWifiConfig] that has to follow is rejected from there. Resetting
+  /// first puts it back to "started", so the sequence is:
+  ///
+  /// ```dart
+  /// await prov.resetWifiState();
+  /// await prov.sendWifiConfig(ssid: ssid, password: correctedPassword);
+  /// await prov.applyWifiConfig();
+  /// ```
+  ///
+  /// Talks to the `prov-ctrl` endpoint, which the device registers whenever
+  /// provisioning is running. Returns false if the device declined — most
+  /// likely because it is not in a failure state, which is also the harmless
+  /// case, since there is then nothing to clear.
+  Future<bool> resetWifiState() async {
+    var payload = NetworkCtrlPayload();
+    payload.msg = NetworkCtrlMsgType.TypeCmdCtrlWifiReset;
+    payload.cmdCtrlWifiReset = CmdCtrlWifiReset();
+
+    var reqData = await security.encrypt(payload.writeToBuffer());
+    var respData = await transport.sendReceive('prov-ctrl', reqData);
+    var respRaw = await security.decrypt(respData);
+    var respPayload = NetworkCtrlPayload.fromBuffer(respRaw);
+
+    // Same validation the scan paths do, and for the same reason getStatus
+    // now does it: Status.Success is the proto3 zero value, so an empty or
+    // mistyped response would otherwise read as a confident success.
+    if (respPayload.msg != NetworkCtrlMsgType.TypeRespCtrlWifiReset) {
+      throw Exception('Invalid expected message type $respPayload');
+    }
+    if (respPayload.whichPayload() !=
+        NetworkCtrlPayload_Payload.respCtrlWifiReset) {
+      throw Exception('Response carried no reset payload $respPayload');
+    }
+    return respPayload.status == Status.Success;
   }
 
   Future<Uint8List> sendReceiveCustomData(Uint8List data,
