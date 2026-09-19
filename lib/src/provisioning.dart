@@ -205,6 +205,35 @@ class Provisioning {
     var respRaw = await security.decrypt(respData);
     var respPayload = WiFiConfigPayload.fromBuffer(respRaw);
 
+    // Validate before reading, as the scan paths do. Without this, any
+    // response that is not a RespGetStatus -- an empty body, an error
+    // response, a stale reply, or garbage from a desynchronised keystream --
+    // decodes into a default-valued RespGetStatus whose sta_state is 0, and
+    // 0 is `Connected`. That turns "I could not tell" into a confident
+    // "yes, it joined your network", which is the one answer a caller of
+    // this method must never be given wrongly.
+    //
+    // TypeRespGetStatus is enum value 1, so unlike sta_state == 0 it is not
+    // a proto3 default and is genuinely present on the wire.
+    if (respPayload.msg != WiFiConfigMsgType.TypeRespGetStatus) {
+      throw Exception('Invalid expected message type $respPayload');
+    }
+    if (respPayload.whichPayload() !=
+        WiFiConfigPayload_Payload.respGetStatus) {
+      throw Exception('Response carried no status payload $respPayload');
+    }
+
+    // Oneof membership is written on the wire even for default-valued
+    // members, so this distinguishes a real Connected/ConnectionFailed from
+    // an absent one, where `sta_state` alone cannot.
+    // staState 0 is Connected; compared by value because wifi_constants'
+    // enums are imported here only under a prefix.
+    if (respPayload.respGetStatus.staState.value == 0 &&
+        respPayload.respGetStatus.whichState() !=
+            RespGetStatus_State.connected) {
+      throw Exception('Status reported Connected with no connection details');
+    }
+
     if (respPayload.respGetStatus.staState.value == 0) {
       return ConnectionStatus(
           state: WifiConnectionState.Connected,

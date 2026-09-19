@@ -1,3 +1,4 @@
+export 'src/connection_models.dart';
 export 'src/provisioning.dart';
 export 'src/security.dart';
 export 'src/security1.dart';
