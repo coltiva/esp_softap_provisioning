@@ -35,17 +35,32 @@ the version the Coltiva firmware pins. It defines the `prov-ctrl` endpoint,
 whose `CmdCtrlWifiReset` clears the device's provisioning state machine after
 a refused join so corrected credentials can be applied over the same session.
 
-> **The Dart under `dart/network_ctrl.*` was written by hand**, against the
-> shape `protoc` produces for the other files here, because no Dart toolchain
-> was available where it was added. It carries the usual "generated code"
-> header so that a real regeneration diffs cleanly rather than rewriting the
-> file wholesale — but it has not itself been through `protoc`.
->
-> **Regenerate it before relying on it**, and check the diff is empty:
->
-> ```sh
-> dart pub global activate protoc_plugin
-> protoc --dart_out=lib/src/proto/dart -Ilib/src/proto \
->     lib/src/proto/network_ctrl.proto
-> git diff --stat lib/src/proto/dart/
-> ```
+## Regenerating
+
+**Pin the plugin version.** `protoc_plugin` and the `protobuf` runtime move in
+lockstep, and this package pins `protobuf: ^4.0.0`, which resolves to 4.0.0.
+Only plugin 22.0.1 and 22.1.0 target that runtime:
+
+| protoc_plugin | emits code for |
+|---|---|
+| 22.0.1, **22.1.0** | `protobuf: ^4.0.0` ← what this package pins |
+| 22.2.0 – 22.5.0 | `protobuf: ^4.1.0` |
+| 23.x, 24.x | `protobuf: ^5.0.0` |
+| 25.x (current latest) | `protobuf: ^6.0.0` |
+
+A bare `dart pub global activate protoc_plugin` gets the latest, whose output
+calls runtime APIs that do not exist in 4.0.0 (`ProtobufEnum.$_initByValueList`
+in place of `initByValue`) — it will not compile here, and it rewrites the file
+wholesale so the diff tells you nothing.
+
+```sh
+dart pub global activate protoc_plugin 22.1.0
+protoc --dart_out=lib/src/proto/dart -Ilib/src/proto \
+    lib/src/proto/network_ctrl.proto
+git diff --stat lib/src/proto/dart/
+```
+
+Every other `.proto` here was generated with that same plugin generation, so a
+regeneration of any of them should come back empty too. Moving to a newer
+runtime means bumping `protobuf` and regenerating **all** of them together —
+the two styles cannot be mixed in one package.

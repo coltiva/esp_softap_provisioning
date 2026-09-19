@@ -13,7 +13,7 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'constants.pbenum.dart' as $1;
+import 'constants.pbenum.dart' as $0;
 import 'network_ctrl.pbenum.dart';
 
 export 'package:protobuf/protobuf.dart' show GeneratedMessageGenericExtensions;
@@ -291,7 +291,7 @@ enum NetworkCtrlPayload_Payload {
 class NetworkCtrlPayload extends $pb.GeneratedMessage {
   factory NetworkCtrlPayload({
     NetworkCtrlMsgType? msg,
-    $1.Status? status,
+    $0.Status? status,
     CmdCtrlWifiReset? cmdCtrlWifiReset,
     RespCtrlWifiReset? respCtrlWifiReset,
     CmdCtrlWifiReprov? cmdCtrlWifiReprov,
@@ -352,7 +352,7 @@ class NetworkCtrlPayload extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NetworkCtrlPayload', createEmptyInstance: create)
     ..oo(0, [11, 12, 13, 14, 15, 16, 17, 18])
     ..e<NetworkCtrlMsgType>(1, _omitFieldNames ? '' : 'msg', $pb.PbFieldType.OE, defaultOrMaker: NetworkCtrlMsgType.TypeCtrlReserved, valueOf: NetworkCtrlMsgType.valueOf, enumValues: NetworkCtrlMsgType.values)
-    ..e<$1.Status>(2, _omitFieldNames ? '' : 'status', $pb.PbFieldType.OE, defaultOrMaker: $1.Status.Success, valueOf: $1.Status.valueOf, enumValues: $1.Status.values)
+    ..e<$0.Status>(2, _omitFieldNames ? '' : 'status', $pb.PbFieldType.OE, defaultOrMaker: $0.Status.Success, valueOf: $0.Status.valueOf, enumValues: $0.Status.values)
     ..aOM<CmdCtrlWifiReset>(11, _omitFieldNames ? '' : 'cmdCtrlWifiReset', subBuilder: CmdCtrlWifiReset.create)
     ..aOM<RespCtrlWifiReset>(12, _omitFieldNames ? '' : 'respCtrlWifiReset', subBuilder: RespCtrlWifiReset.create)
     ..aOM<CmdCtrlWifiReprov>(13, _omitFieldNames ? '' : 'cmdCtrlWifiReprov', subBuilder: CmdCtrlWifiReprov.create)
@@ -398,9 +398,9 @@ class NetworkCtrlPayload extends $pb.GeneratedMessage {
   void clearMsg() => $_clearField(1);
 
   @$pb.TagNumber(2)
-  $1.Status get status => $_getN(1);
+  $0.Status get status => $_getN(1);
   @$pb.TagNumber(2)
-  set status($1.Status v) { $_setField(2, v); }
+  set status($0.Status v) { $_setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasStatus() => $_has(1);
   @$pb.TagNumber(2)
@@ -493,7 +493,6 @@ class NetworkCtrlPayload extends $pb.GeneratedMessage {
   void clearRespCtrlThreadReprov() => $_clearField(18);
   @$pb.TagNumber(18)
   RespCtrlThreadReprov ensureRespCtrlThreadReprov() => $_ensure(9);
-
 }
 
 
